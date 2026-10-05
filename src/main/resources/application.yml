@@ -1,0 +1,15 @@
+server:
+  port: 8080
+
+spring:
+  application:
+  name: samewave-community
+  profiles:
+    active: local
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.leegop.samewave.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
