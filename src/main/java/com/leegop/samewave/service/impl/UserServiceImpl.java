@@ -1,4 +1,4 @@
-package com.leegop.samewave.service.Impl;
+package com.leegop.samewave.service.impl;
 
 import com.leegop.samewave.common.constant.UserStatus;
 import com.leegop.samewave.common.exception.BusinessException;
@@ -13,7 +13,6 @@ import com.leegop.samewave.vo.LoginVO;
 import com.leegop.samewave.vo.UserVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

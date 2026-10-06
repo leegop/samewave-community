@@ -26,4 +26,7 @@ public class PostDetailVO {
 
     private LocalDateTime publishTime;
     private LocalDateTime createTime;
+
+    private Integer status;
+    private Integer auditStatus;
 }

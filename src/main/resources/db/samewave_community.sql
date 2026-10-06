@@ -11,7 +11,7 @@
  Target Server Version : 80046 (8.0.46)
  File Encoding         : 65001
 
- Date: 05/10/2026 20:04:16
+ Date: 06/10/2026 21:39:56
 */
 
 SET NAMES utf8mb4;
@@ -111,7 +111,10 @@ CREATE TABLE `post`  (
   `user_id` bigint UNSIGNED NOT NULL COMMENT '作者ID',
   `title` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '' COMMENT '标题',
   `cover_image` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '' COMMENT '封面图URL',
-  `status` tinyint NOT NULL DEFAULT 0 COMMENT '0草稿 1已发布 2审核中 3已删除',
+  `status` tinyint NOT NULL DEFAULT 0 COMMENT '0草稿 1已发布 2已下架',
+  `audit_status` tinyint NOT NULL DEFAULT 0 COMMENT '0待审核 1审核通过 2审核不通过',
+  `audit_time` datetime NULL DEFAULT NULL COMMENT '审核完成时间',
+  `audit_remark` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '' COMMENT '审核备注/不通过原因',
   `visibility` tinyint NOT NULL DEFAULT 0 COMMENT '0公开 1仅粉丝 2私密',
   `is_top` tinyint NOT NULL DEFAULT 0 COMMENT '是否置顶',
   `like_count` int UNSIGNED NOT NULL DEFAULT 0 COMMENT '点赞数(冗余)',
@@ -124,8 +127,9 @@ CREATE TABLE `post`  (
   `deleted` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_user_time`(`user_id` ASC, `deleted` ASC, `create_time` ASC) USING BTREE,
-  INDEX `idx_status_time`(`status` ASC, `publish_time` ASC) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '帖子表' ROW_FORMAT = Dynamic;
+  INDEX `idx_status_time`(`status` ASC, `publish_time` ASC) USING BTREE,
+  INDEX `idx_audit_status_time`(`audit_status` ASC, `create_time` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '帖子表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for post_collect
@@ -179,7 +183,7 @@ CREATE TABLE `post_tag`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_post_tag`(`post_id` ASC, `tag_id` ASC) USING BTREE,
   INDEX `idx_tag_post`(`tag_id` ASC, `post_id` ASC) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '帖子标签关联表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '帖子标签关联表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for tag
@@ -192,7 +196,7 @@ CREATE TABLE `tag`  (
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_name`(`name` ASC) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '标签表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '标签表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for user

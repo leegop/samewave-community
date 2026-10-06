@@ -5,13 +5,12 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum PostStatus {
+public enum AuditStatus {
 
-    DRAFT( 0 , "草稿" ),
-    PUBLISHED( 1 , "已发布" ),
-    TAKEN_DOWN( 2 , "已下架" );
+    PENDING(0, "待审核"),
+    PASS(1, "审核通过"),
+    REJECT(2, "审核不通过");
 
     private final Integer code;
     private final String desc;
-
 }

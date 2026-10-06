@@ -1,6 +1,8 @@
-package com.leegop.samewave.service.Impl;
+package com.leegop.samewave.service.impl;
 
+import com.leegop.samewave.common.constant.AuditStatus;
 import com.leegop.samewave.common.constant.PostStatus;
+import com.leegop.samewave.common.context.UserContext;
 import com.leegop.samewave.common.exception.BusinessException;
 import com.leegop.samewave.common.result.ResultCode;
 import com.leegop.samewave.dto.PostCreateDTO;
@@ -18,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,11 +41,13 @@ public class PostServiceImpl implements PostService {
         post.setUserId(userId);
         post.setTitle(dto.getTitle());
         post.setCoverImage(dto.getCoverImage() == null ? "" : dto.getCoverImage());
-        post.setStatus(PostStatus.AUDITING.getCode());
+        post.setStatus(PostStatus.PUBLISHED.getCode());
+        post.setAuditStatus(AuditStatus.PENDING.getCode());
         post.setPublishTime(LocalDateTime.now());
         postMapper.insert(post);
 
-        //TODO 异步对帖子进行审核
+        // TODO 阶段2：发送 MQ 消息，由审核消费者异步处理
+        // 回写审核结果时必须带 WHERE audit_status = 0 来保证幂等
 
         // 2. 正文单独一张表，用上一步拿到的 postId
         PostContent content = new PostContent();
@@ -64,8 +69,23 @@ public class PostServiceImpl implements PostService {
             throw new BusinessException(ResultCode.NOT_FOUND);
         }
 
+        // 草稿 / 已下架的帖子只有作者本人能看，其他人一律按不存在处理
+        boolean visible = PostStatus.PUBLISHED.getCode().equals(post.getStatus());
+        if (!visible && !Objects.equals(post.getUserId(), UserContext.getUserId())) {
+            throw new BusinessException(ResultCode.NOT_FOUND);
+        }
+
+        // TODO 可见性 visibility 尚未接入，当前只区分「已发布 / 非已发布」：
+        //   0 公开   -> 已发布即可见                      ✅ 符合预期
+        //   1 仅粉丝 -> 还应校验「我是否关注了作者」        ⚠️ 未校验
+        //   2 私密   -> 仅作者可见                        ❌ 非作者目前也能看到，待修
+        //   改造时按这个顺序（不可颠倒）：
+        //     作者本人放行 -> status 必须 PUBLISHED -> 再按 visibility 分支
+        //   依赖：PostVisibility 枚举 + UserFollowMapper.countFollow(userId, followUserId)
+        //   注意：列表 / Feed / 搜索等所有读入口都要用同一套规则，否则会在列表页泄露
+
         PostContent content = postContentMapper.selectByPostId(id);
-        List<String> tags = postTagMapper.selectTagNamesByPostId(id);   // ← 就改了这里
+        List<String> tags = postTagMapper.selectTagNamesByPostId(id);
         User author = userMapper.selectById(post.getUserId());
 
         PostDetailVO vo = new PostDetailVO();
@@ -81,6 +101,10 @@ public class PostServiceImpl implements PostService {
         vo.setTags(tags);
         vo.setPublishTime(post.getPublishTime());
         vo.setCreateTime(post.getCreateTime());
+
+        vo.setStatus(post.getStatus());
+        // TODO auditStatus / auditRemark 应只对作者本人返回，避免向他人泄露审核信息
+        vo.setAuditStatus(post.getAuditStatus());
 
         if (author != null) {
             vo.setAuthorNickname(author.getNickname());
@@ -104,7 +128,7 @@ public class PostServiceImpl implements PostService {
                 .toList();
         if (names.isEmpty()) {
             // trim 后可能全空，提前收口
-            return ;
+            return;
         }
         // 一次查询捞出所有已存在的标签
         Map<String, Tag> nameToTag = tagMapper.selectByNames(names).stream()
@@ -127,7 +151,7 @@ public class PostServiceImpl implements PostService {
             } else {
                 tagMapper.incrPostCount(tag.getId());
             }
-            PostTag postTag = new PostTag ();
+            PostTag postTag = new PostTag();
             postTag.setPostId(postId);
             postTag.setTagId(tag.getId());
             postTags.add(postTag);
