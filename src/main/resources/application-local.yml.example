@@ -1,9 +1,13 @@
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/samewave?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:3306/samewave_community?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
     username: your_username
     password: your_password
     hikari:
       maximum-pool-size: 10
       minimum-idle: 5
+
+jwt:
+  secret: your_secret
+  expire: 86400000 # token 有效期，单位毫秒（24 小时）

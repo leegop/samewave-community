@@ -11,7 +11,7 @@
  Target Server Version : 80046 (8.0.46)
  File Encoding         : 65001
 
- Date: 05/10/2026 19:03:31
+ Date: 05/10/2026 20:04:16
 */
 
 SET NAMES utf8mb4;
@@ -208,7 +208,7 @@ CREATE TABLE `user`  (
   `phone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '手机号',
   `gender` tinyint NOT NULL DEFAULT 0 COMMENT '0未知 1男 2女',
   `bio` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '' COMMENT '个人简介',
-  `status` tinyint NOT NULL DEFAULT 0 COMMENT '0正常 1禁言 2封号',
+  `status` tinyint NOT NULL DEFAULT 0 COMMENT '0正常 1禁言 2封号 3注销',
   `follow_count` int UNSIGNED NOT NULL DEFAULT 0 COMMENT '关注数(冗余)',
   `fans_count` int UNSIGNED NOT NULL DEFAULT 0 COMMENT '粉丝数(冗余)',
   `last_login_at` datetime NULL DEFAULT NULL COMMENT '最后登录时间',
@@ -218,7 +218,7 @@ CREATE TABLE `user`  (
   UNIQUE INDEX `uk_username`(`username` ASC) USING BTREE,
   UNIQUE INDEX `uk_email`(`email` ASC) USING BTREE,
   UNIQUE INDEX `uk_phone`(`phone` ASC) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for user_follow

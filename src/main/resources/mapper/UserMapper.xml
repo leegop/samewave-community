@@ -6,7 +6,7 @@
     <sql id="baseColumns">
         id, username, password, nickname, avatar, email, phone, gender,
         bio, status, follow_count, fans_count, last_login_at,
-        create_time, update_time, deleted
+        create_time, update_time
     </sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">

@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-  name: samewave-community
+    name: samewave-community
   profiles:
     active: local
 

@@ -11,6 +11,7 @@ import com.leegop.samewave.mapper.UserMapper;
 import com.leegop.samewave.service.UserService;
 import com.leegop.samewave.vo.LoginVO;
 import com.leegop.samewave.vo.UserVO;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
@@ -18,21 +19,18 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    @Autowired
-    private UserMapper userMapper;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
-    private JwtUtil jwtUtil;
+    private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
     @Override
     public LoginVO register(UserRegisterDTO dto) {
         if (userMapper.selectByUsername(dto.getUsername()) != null) {
             throw new BusinessException("用户名已被占用");
         }
-        ;
 
         User user = new User();
         user.setUsername(dto.getUsername());
