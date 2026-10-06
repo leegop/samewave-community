@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.leegop.samewave.mapper.TagMapper">
+
+    <select id="selectByName" resultType="Tag">
+        SELECT id, name, post_count, create_time
+        FROM tag
+        WHERE name = #{name}
+    </select>
+
+    <select id="selectByNames" resultType="Tag">
+        SELECT id, name, post_count, create_time
+        FROM tag
+        WHERE name IN
+        <foreach collection="names" item="name" open="(" separator="," close=")">
+            #{name}
+        </foreach>
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO tag (name, post_count)
+        VALUES (#{name}, #{postCount})
+    </insert>
+
+    <update id="incrPostCount">
+        UPDATE tag
+        SET post_count = post_count + 1
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删帖时标签计数 -1，用 CASE 兜底防止减成负数 -->
+    <update id="decrPostCount">
+        UPDATE tag
+        SET post_count = CASE WHEN post_count > 0 THEN post_count - 1 ELSE 0 END
+        WHERE id = #{id}
+    </update>
+</mapper>

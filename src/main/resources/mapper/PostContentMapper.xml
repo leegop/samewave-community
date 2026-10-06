@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.leegop.samewave.mapper.PostContentMapper">
+
+    <insert id="insert">
+        INSERT INTO post_content (post_id, content)
+        VALUES (#{postId}, #{content})
+    </insert>
+
+    <select id="selectByPostId" resultType="PostContent">
+        SELECT post_id, content, create_time, update_time
+        FROM post_content
+        WHERE post_id = #{postId}
+    </select>
+</mapper>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.leegop.samewave.mapper.PostMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO post (user_id, title, cover_image, status, publish_time)
+        VALUES (#{userId}, #{title}, #{coverImage}, #{status}, #{publishTime})
+    </insert>
+
+    <select id="selectById" resultType="Post">
+        SELECT id, user_id, title, cover_image, status, visibility, is_top,
+               like_count, comment_count, collect_count, view_count,
+               publish_time, create_time, update_time
+        FROM post
+        WHERE id = #{id} AND deleted = 0
+    </select>
+</mapper>
