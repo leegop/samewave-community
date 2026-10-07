@@ -14,4 +14,6 @@ public interface PostMapper {
     Post selectById(Long id);
 
     List<PostListVO> selectPage(PostQueryDTO query, Long currentUserId);
+
+    List<PostListVO> selectMyPage(PostQueryDTO query, Long currentUserId);
 }

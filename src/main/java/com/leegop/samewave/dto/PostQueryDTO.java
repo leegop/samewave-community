@@ -15,11 +15,13 @@ public class PostQueryDTO {
     private Integer pageSize = 10;
 
     /** 只看某个作者的帖子 */
-    private Long userId;
+    private Long authorId;
 
     /** 按标签筛选 */
     private Integer tagId;
 
     /** 标题关键词。现在是 LIKE，阶段2 换成 ES */
     private String keyword;
+
+    private Integer status;
 }

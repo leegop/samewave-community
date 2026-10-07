@@ -13,7 +13,7 @@ import java.util.List;
 public class PostListVO {
 
     private Long id;
-    private Long userId;
+    private Long authorId;
     private String title;
     private String coverImage;
 

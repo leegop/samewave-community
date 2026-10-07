@@ -42,4 +42,13 @@ public class PostController {
     public Result<PageResult<PostListVO>> list(@Valid PostQueryDTO query) {
         return Result.success(postService.listPosts(query));
     }
+
+    /**
+     * 我的帖子：草稿箱(status=0) / 已发布(status=1) / 已下架(status=2)，
+     * 不传 status 则查全部
+     */
+    @GetMapping("/my")
+    public Result<PageResult<PostListVO>> myPosts(@Valid PostQueryDTO query) {
+        return Result.success(postService.listMyPosts(query));
+    }
 }

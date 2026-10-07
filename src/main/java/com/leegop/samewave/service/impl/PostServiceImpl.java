@@ -96,7 +96,7 @@ public class PostServiceImpl implements PostService {
 
         PostDetailVO vo = new PostDetailVO();
         vo.setId(post.getId());
-        vo.setUserId(post.getUserId());
+        vo.setAuthorId(post.getUserId());
         vo.setTitle(post.getTitle());
         vo.setContent(content == null ? "" : content.getContent());
         vo.setCoverImage(post.getCoverImage());
@@ -127,19 +127,37 @@ public class PostServiceImpl implements PostService {
         PageHelper.startPage(query.getPageNum(), query.getPageSize());
         List<PostListVO> posts = postMapper.selectPage(query, currentUserId);
 
-        // 批量补标签
-        if (!posts.isEmpty()) {
-            List<Long> postIds = posts.stream().map(PostListVO::getId).toList();
-            Map<Long, List<String>> tagMap = postTagMapper.selectByPostIds(postIds).stream()
-                    .collect(Collectors.groupingBy(
-                            PostTagNameDTO::getPostId,
-                            Collectors.mapping(PostTagNameDTO::getTagName, Collectors.toList())));
+        fillTags(posts);
+        return PageResult.of(new PageInfo<>(posts));
+    }
 
-            posts.forEach(post -> post.setTags(tagMap.getOrDefault(post.getId(), List.of())));
+    @Override
+    public PageResult<PostListVO> listMyPosts(PostQueryDTO query) {
+        // 注意：即使前端传了 userId 也会被忽略，只查当前登录用户
+        Long currentUserId = UserContext.getUserId();
+
+        PageHelper.startPage(query.getPageNum(), query.getPageSize());
+        List<PostListVO> posts = postMapper.selectMyPage(query, currentUserId);
+
+        fillTags(posts);
+        return PageResult.of(new PageInfo<>(posts));
+    }
+
+    /**
+     * 批量补标签
+     */
+    private void fillTags(List<PostListVO> posts) {
+        if (CollectionUtils.isEmpty(posts)) {
+            return;
         }
 
-        // 标签填好之后再包装分页信息
-        return PageResult.of(new PageInfo<>(posts));
+        List<Long> postIds = posts.stream().map(PostListVO::getId).toList();
+        Map<Long, List<String>> tagMap = postTagMapper.selectByPostIds(postIds).stream()
+                .collect(Collectors.groupingBy(
+                        PostTagNameDTO::getPostId,
+                        Collectors.mapping(PostTagNameDTO::getTagName, Collectors.toList())));
+
+        posts.forEach(post -> post.setTags(tagMap.getOrDefault(post.getId(), List.of())));
     }
 
     /**

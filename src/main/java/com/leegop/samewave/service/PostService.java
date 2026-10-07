@@ -12,4 +12,6 @@ public interface PostService {
     PostDetailVO getDetail(Long id);
 
     PageResult<PostListVO> listPosts(PostQueryDTO query);
+
+    PageResult<PostListVO> listMyPosts(PostQueryDTO query);
 }

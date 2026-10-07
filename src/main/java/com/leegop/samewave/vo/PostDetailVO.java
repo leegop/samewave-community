@@ -9,7 +9,7 @@ import java.util.List;
 public class PostDetailVO {
 
     private Long id;
-    private Long userId;
+    private Long authorId;
     private String title;
     private String content;
     private String coverImage;

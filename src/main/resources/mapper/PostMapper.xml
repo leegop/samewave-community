@@ -42,7 +42,7 @@
      -->
     <select id="selectPage" resultType="com.leegop.samewave.vo.PostListVO">
         SELECT p.id,
-        p.user_id AS userId,
+        p.user_id AS authorId,
         p.title,
         p.cover_image AS coverImage,
         p.like_count AS likeCount,
@@ -59,8 +59,8 @@
             AND p.status = 1
             AND p.audit_status != 2
             AND (p.visibility = 0 OR p.user_id = #{currentUserId})
-            <if test="query.userId != null">
-                AND p.user_id = #{query.userId}
+            <if test="query.authorId != null">
+                AND p.user_id = #{query.authorId}
             </if>
             <if test="query.tagId != null">
                 AND EXISTS (
@@ -73,5 +73,32 @@
             </if>
         </where>
         ORDER BY p.is_top DESC, p.publish_time DESC
+    </select>
+
+    <select id="selectMyPage" resultType="com.leegop.samewave.vo.PostListVO">
+        SELECT p.id,
+        p.user_id       AS authorId,
+        p.title,
+        p.cover_image   AS coverImage,
+        p.like_count    AS likeCount,
+        p.comment_count AS commentCount,
+        p.collect_count AS collectCount,
+        p.view_count    AS viewCount,
+        p.publish_time  AS publishTime,
+        u.nickname      AS authorNickname,
+        u.avatar        AS authorAvatar
+        FROM post p
+        LEFT JOIN `user` u ON u.id = p.user_id
+        <where>
+            p.deleted = 0
+            AND p.user_id = #{currentUserId}
+            <if test="query.status != null">
+                AND p.status = #{query.status}
+            </if>
+            <if test="query.keyword != null and query.keyword != ''">
+                AND p.title LIKE CONCAT('%', #{query.keyword}, '%')
+            </if>
+        </where>
+        ORDER BY p.is_top DESC, p.create_time DESC, p.id DESC
     </select>
 </mapper>
