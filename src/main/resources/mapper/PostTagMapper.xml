@@ -15,7 +15,6 @@
         </foreach>
     </insert>
 
-    <!-- 主表是 post_tag，所以这条 join 查询归属这里 -->
     <select id="selectTagNamesByPostId" resultType="java.lang.String">
         SELECT t.name
         FROM post_tag pt
@@ -24,7 +23,8 @@
     </select>
 
     <delete id="deleteByPostId">
-        DELETE FROM post_tag
+        DELETE
+        FROM post_tag
         WHERE post_id = #{postId}
     </delete>
 
@@ -32,5 +32,16 @@
         SELECT post_id
         FROM post_tag
         WHERE tag_id = #{tagId}
+    </select>
+
+    <select id="selectByPostIds" resultType="com.leegop.samewave.dto.PostTagNameDTO">
+        SELECT pt.post_id AS postId,
+        t.name AS tagName
+        FROM post_tag pt
+        JOIN tag t ON pt.tag_id = t.id
+        WHERE pt.post_id IN
+        <foreach collection="postIds" item="postId" open="(" separator="," close=")">
+            #{postId}
+        </foreach>
     </select>
 </mapper>

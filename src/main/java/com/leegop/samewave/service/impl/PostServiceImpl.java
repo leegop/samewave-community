@@ -1,15 +1,21 @@
 package com.leegop.samewave.service.impl;
 
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.leegop.samewave.common.constant.AuditStatus;
 import com.leegop.samewave.common.constant.PostStatus;
 import com.leegop.samewave.common.context.UserContext;
 import com.leegop.samewave.common.exception.BusinessException;
+import com.leegop.samewave.common.result.PageResult;
 import com.leegop.samewave.common.result.ResultCode;
 import com.leegop.samewave.dto.PostCreateDTO;
+import com.leegop.samewave.dto.PostQueryDTO;
+import com.leegop.samewave.dto.PostTagNameDTO;
 import com.leegop.samewave.entity.*;
 import com.leegop.samewave.mapper.*;
 import com.leegop.samewave.service.PostService;
 import com.leegop.samewave.vo.PostDetailVO;
+import com.leegop.samewave.vo.PostListVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
@@ -111,6 +117,29 @@ public class PostServiceImpl implements PostService {
             vo.setAuthorAvatar(author.getAvatar());
         }
         return vo;
+    }
+
+    @Override
+    public PageResult<PostListVO> listPosts(PostQueryDTO query) {
+        Long currentUserId = UserContext.getUserId();
+
+        // PageHelper.startPage 只对「紧接着的那一次查询」生效
+        PageHelper.startPage(query.getPageNum(), query.getPageSize());
+        List<PostListVO> posts = postMapper.selectPage(query, currentUserId);
+
+        // 批量补标签
+        if (!posts.isEmpty()) {
+            List<Long> postIds = posts.stream().map(PostListVO::getId).toList();
+            Map<Long, List<String>> tagMap = postTagMapper.selectByPostIds(postIds).stream()
+                    .collect(Collectors.groupingBy(
+                            PostTagNameDTO::getPostId,
+                            Collectors.mapping(PostTagNameDTO::getTagName, Collectors.toList())));
+
+            posts.forEach(post -> post.setTags(tagMap.getOrDefault(post.getId(), List.of())));
+        }
+
+        // 标签填好之后再包装分页信息
+        return PageResult.of(new PageInfo<>(posts));
     }
 
     /**
