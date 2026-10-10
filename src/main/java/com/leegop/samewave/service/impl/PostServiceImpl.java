@@ -14,6 +14,7 @@ import com.leegop.samewave.dto.PostTagNameDTO;
 import com.leegop.samewave.entity.*;
 import com.leegop.samewave.mapper.*;
 import com.leegop.samewave.service.PostService;
+import com.leegop.samewave.service.support.PostAccessChecker;
 import com.leegop.samewave.vo.PostDetailVO;
 import com.leegop.samewave.vo.PostListVO;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,7 @@ public class PostServiceImpl implements PostService {
     private final TagMapper tagMapper;
     private final PostTagMapper postTagMapper;
     private final UserMapper userMapper;
+    private final PostAccessChecker postAccessChecker;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -76,8 +78,8 @@ public class PostServiceImpl implements PostService {
         }
 
         // 草稿 / 已下架的帖子只有作者本人能看，其他人一律按不存在处理
-        boolean visible = PostStatus.PUBLISHED.getCode().equals(post.getStatus());
-        if (!visible && !Objects.equals(post.getUserId(), UserContext.getUserId())) {
+        Long currentUserId = UserContext.getUserId();
+        if (!postAccessChecker.canView(post, currentUserId)) {
             throw new BusinessException(ResultCode.NOT_FOUND);
         }
 
@@ -108,9 +110,10 @@ public class PostServiceImpl implements PostService {
         vo.setPublishTime(post.getPublishTime());
         vo.setCreateTime(post.getCreateTime());
 
+        boolean isAuthor = Objects.equals(post.getUserId(), currentUserId);
         vo.setStatus(post.getStatus());
-        // TODO auditStatus / auditRemark 应只对作者本人返回，避免向他人泄露审核信息
-        vo.setAuditStatus(post.getAuditStatus());
+        // 审核信息只给作者本人看，避免向他人泄露「这条被审核了/被拒了」
+        vo.setAuditStatus(isAuthor ? post.getAuditStatus() : null);
 
         if (author != null) {
             vo.setAuthorNickname(author.getNickname());

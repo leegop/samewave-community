@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.leegop.samewave.mapper.CommentMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO comment (post_id, user_id, parent_id, root_id, reply_user_id, content)
+        VALUES (#{postId}, #{userId}, #{parentId}, #{rootId}, #{replyUserId}, #{content})
+    </insert>
+
+    <select id="selectById" resultType="Comment">
+        SELECT id,
+               post_id,
+               user_id,
+               parent_id,
+               root_id,
+               reply_user_id,
+               content,
+               like_count,
+               status,
+               create_time,
+               update_time,
+               deleted
+        FROM comment
+        WHERE id = #{id}
+          AND deleted = 0
+    </select>
+
+    <!--
+        顶层评论分页：root_id = 0 才是顶层
+        replyCount 用相关子查询算，注意带上 c2.post_id = c.post_id，
+        这样能命中 idx_post_root_time(post_id, root_id, create_time)，
+        否则光靠 root_id 用不上这个索引
+    -->
+    <select id="selectTopPage" resultType="com.leegop.samewave.vo.CommentVO">
+        SELECT c.id,
+               c.post_id              AS postId,
+               c.user_id              AS userId,
+               c.content,
+               c.parent_id            AS parentId,
+               c.root_id              AS rootId,
+               c.reply_user_id        AS replyUserId,
+               c.like_count           AS likeCount,
+               c.create_time          AS createTime,
+               u.nickname             AS authorNickname,
+               u.avatar               AS authorAvatar,
+               (SELECT COUNT(*)
+                FROM comment c2
+                WHERE c2.post_id = c.post_id
+                  AND c2.root_id = c.id
+                  AND c2.deleted = 0) AS replyCount
+        FROM comment c
+                 LEFT JOIN `user` u ON u.id = c.user_id
+        WHERE c.post_id = #{postId}
+          AND c.root_id = 0
+          AND c.deleted = 0
+        ORDER BY c.create_time DESC, c.id DESC
+    </select>
+
+    <!--
+        回复预览：一批顶层评论一次查完，再用窗口函数每组只取前 2 条
+        ROW_NUMBER 需要 MySQL 8.0+，你的库是 utf8mb4_0900_ai_ci，满足
+    -->
+    <select id="selectReplyPreviews" resultType="com.leegop.samewave.vo.CommentVO">
+        SELECT t.id,
+        t.postId,
+        t.userId,
+        t.content,
+        t.parentId,
+        t.rootId,
+        t.replyUserId,
+        t.likeCount,
+        t.createTime,
+        t.authorNickname,
+        t.authorAvatar,
+        t.replyUserNickname
+        FROM (
+        SELECT c.id,
+        c.post_id AS postId,
+        c.user_id AS userId,
+        c.content,
+        c.parent_id AS parentId,
+        c.root_id AS rootId,
+        c.reply_user_id AS replyUserId,
+        c.like_count AS likeCount,
+        c.create_time AS createTime,
+        u.nickname AS authorNickname,
+        u.avatar AS authorAvatar,
+        ru.nickname AS replyUserNickname,
+        ROW_NUMBER() OVER (
+        PARTITION BY c.root_id
+        ORDER BY c.create_time ASC, c.id ASC
+        ) AS rn
+        FROM comment c
+        LEFT JOIN `user` u ON u.id = c.user_id
+        LEFT JOIN `user` ru ON ru.id = c.reply_user_id
+        WHERE c.post_id = #{postId}
+        AND c.deleted = 0
+        AND c.root_id IN
+        <foreach collection="rootIds" item="rootId" open="(" separator="," close=")">
+            #{rootId}
+        </foreach>
+        ) t
+        WHERE t.rn &lt;= 2
+        ORDER BY t.rootId ASC, t.createTime ASC
+    </select>
+
+    <select id="selectRepliesPage" resultType="com.leegop.samewave.vo.CommentVO">
+        SELECT c.id,
+               c.post_id       AS postId,
+               c.user_id       AS userId,
+               c.content,
+               c.parent_id     AS parentId,
+               c.root_id       AS rootId,
+               c.reply_user_id AS replyUserId,
+               c.like_count    AS likeCount,
+               c.create_time   AS createTime,
+               u.nickname      AS authorNickname,
+               u.avatar        AS authorAvatar,
+               ru.nickname     AS replyUserNickname
+        FROM comment c
+                 LEFT JOIN `user` u ON u.id = c.user_id
+                 LEFT JOIN `user` ru ON ru.id = c.reply_user_id
+        WHERE c.post_id = #{postId}
+          AND c.root_id = #{rootId}
+          AND c.deleted = 0
+        ORDER BY c.create_time ASC, c.id ASC
+    </select>
+
+    <select id="countByRootId" resultType="int">
+        SELECT COUNT(*)
+        FROM comment
+        WHERE post_id = #{postId}
+          AND root_id = #{rootId}
+          AND deleted = 0
+    </select>
+
+    <update id="softDeleteById">
+        UPDATE comment
+        SET deleted = 1,
+            status  = 2
+        WHERE id = #{id}
+          AND deleted = 0
+    </update>
+
+    <update id="softDeleteByRootId">
+        UPDATE comment
+        SET deleted = 1,
+            status  = 2
+        WHERE post_id = #{postId}
+          AND root_id = #{rootId}
+          AND deleted = 0
+    </update>
+</mapper>
