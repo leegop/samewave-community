@@ -10,5 +10,9 @@ import lombok.NoArgsConstructor;
 public class LoginVO {
 
     private String token;
-    private UserVO user;
+
+    /** token 有效期，单位毫秒，前端据此安排续期 */
+    private Long expiresIn;
+
+    private UserSelfVO user;
 }

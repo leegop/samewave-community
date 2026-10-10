@@ -2,6 +2,7 @@ package com.leegop.samewave.service.impl;
 
 import com.leegop.samewave.common.constant.UserStatus;
 import com.leegop.samewave.common.exception.BusinessException;
+import com.leegop.samewave.common.result.BusinessCode;
 import com.leegop.samewave.common.result.ResultCode;
 import com.leegop.samewave.common.util.JwtUtil;
 import com.leegop.samewave.dto.UserLoginDTO;
@@ -10,6 +11,7 @@ import com.leegop.samewave.entity.User;
 import com.leegop.samewave.mapper.UserMapper;
 import com.leegop.samewave.service.UserService;
 import com.leegop.samewave.vo.LoginVO;
+import com.leegop.samewave.vo.UserSelfVO;
 import com.leegop.samewave.vo.UserVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
@@ -28,7 +30,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public LoginVO register(UserRegisterDTO dto) {
         if (userMapper.selectByUsername(dto.getUsername()) != null) {
-            throw new BusinessException("用户名已被占用");
+            throw new BusinessException(BusinessCode.USERNAME_TAKEN);
         }
 
         User user = new User();
@@ -39,7 +41,7 @@ public class UserServiceImpl implements UserService {
         try {
             userMapper.insert(user);
         } catch (DuplicateKeyException e) {
-            throw new BusinessException("用户名已被占用");
+            throw new BusinessException(BusinessCode.USERNAME_TAKEN);
         }
 
         return issueToken(user);
@@ -77,8 +79,8 @@ public class UserServiceImpl implements UserService {
 
     private LoginVO issueToken(User user) {
         String token = jwtUtil.generateToken(user.getId(), user.getUsername());
-        UserVO userVO = new UserVO();
-        BeanUtils.copyProperties(user, userVO);
-        return new LoginVO(token, userVO);
+        UserSelfVO userSelfVO = new UserSelfVO();
+        BeanUtils.copyProperties(user, userSelfVO);
+        return new LoginVO(token,jwtUtil.getExpireMillis(),userSelfVO);
     }
 }

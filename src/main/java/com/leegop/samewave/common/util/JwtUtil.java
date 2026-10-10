@@ -48,4 +48,8 @@ public class JwtUtil {
     public Long getUserId(String token) {
         return Long.valueOf(parseToken(token).getSubject());
     }
+
+    public Long getExpireMillis() {
+        return expire;
+    }
 }

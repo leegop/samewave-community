@@ -4,9 +4,9 @@
 <mapper namespace="com.leegop.samewave.mapper.UserMapper">
 
     <sql id="baseColumns">
-        id, username, password, nickname, avatar, email, phone, gender,
-        bio, status, follow_count, fans_count, last_login_at,
-        create_time, update_time
+        id, username, password, nickname, avatar, cover_image, email, phone, gender,
+        bio, location, website, role, status, mute_until, follow_count, fans_count,
+        post_count, password_update_time, last_login_at, create_time, update_time, deleted
     </sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
@@ -18,12 +18,14 @@
         SELECT <include refid="baseColumns"/>
         FROM `user`
         WHERE username = #{username}
+        AND deleted = 0
     </select>
 
     <select id="selectById" resultType="User">
         SELECT <include refid="baseColumns"/>
         FROM `user`
         WHERE id = #{id}
+        AND deleted = 0
     </select>
 
     <update id="updateLastLoginTime">

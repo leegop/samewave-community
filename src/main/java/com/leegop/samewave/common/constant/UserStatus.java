@@ -8,9 +8,7 @@ import lombok.Getter;
 public enum UserStatus {
 
     NORMAL(0, "正常"),
-    MUTED(1, "已被禁言"),
-    BANNED(2, "已被封禁"),
-    CANCELLED( 3 , "已注销" );
+    BANNED(1, "已被封禁");
 
     private final Integer code;
     private final String desc;
